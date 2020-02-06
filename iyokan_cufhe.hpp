@@ -6,6 +6,8 @@
 
 #include "iyokan.hpp"
 
+#define CUFHE_GPU_NUM (1)
+
 struct CUFHEWorkerInfo {
     std::shared_ptr<cufhe::Stream> stream;
 };
@@ -16,10 +18,10 @@ inline void copyCtxt(cufhe::Ctxt& dst, const cufhe::Ctxt& src,
                      std::shared_ptr<cufhe::Stream> stream = nullptr)
 {
     if (stream)
-        cufhe::Copy(dst, src, *stream);
+        cufhe::mCopy(dst, src, *stream);
     else
-        cufhe::Copy(dst, src);
-    cufhe::Synchronize();
+        cufhe::mCopySync(dst, src);
+    cufhe::Synchronize(CUFHE_GPU_NUM);
 }
 
 class TaskCUFHEGateMem : public TaskCUFHEGate {
@@ -125,17 +127,17 @@ public:
             return cufhe::StreamQuery(*wi_.stream);      \
         }                                                \
     };
-DEFINE_TASK_GATE(AND, 2, cufhe::And(output(), input(0), input(1), *st));
-DEFINE_TASK_GATE(NAND, 2, cufhe::Nand(output(), input(0), input(1), *st));
-DEFINE_TASK_GATE(ANDNOT, 2, cufhe::AndYN(output(), input(0), input(1), *st));
-DEFINE_TASK_GATE(OR, 2, cufhe::Or(output(), input(0), input(1), *st));
-DEFINE_TASK_GATE(NOR, 2, cufhe::Nor(output(), input(0), input(1), *st));
-DEFINE_TASK_GATE(ORNOT, 2, cufhe::OrYN(output(), input(0), input(1), *st));
-DEFINE_TASK_GATE(XOR, 2, cufhe::Xor(output(), input(0), input(1), *st));
-DEFINE_TASK_GATE(XNOR, 2, cufhe::Xnor(output(), input(0), input(1), *st));
+DEFINE_TASK_GATE(AND, 2, cufhe::mAnd(output(), input(0), input(1), *st));
+DEFINE_TASK_GATE(NAND, 2, cufhe::mNand(output(), input(0), input(1), *st));
+DEFINE_TASK_GATE(ANDNOT, 2, cufhe::mAndYN(output(), input(0), input(1), *st));
+DEFINE_TASK_GATE(OR, 2, cufhe::mOr(output(), input(0), input(1), *st));
+DEFINE_TASK_GATE(NOR, 2, cufhe::mNor(output(), input(0), input(1), *st));
+DEFINE_TASK_GATE(ORNOT, 2, cufhe::mOrYN(output(), input(0), input(1), *st));
+DEFINE_TASK_GATE(XOR, 2, cufhe::mXor(output(), input(0), input(1), *st));
+DEFINE_TASK_GATE(XNOR, 2, cufhe::mXnor(output(), input(0), input(1), *st));
 DEFINE_TASK_GATE(MUX, 3,
-                 cufhe::Mux(output(), input(2), input(1), input(0), *st));
-DEFINE_TASK_GATE(NOT, 1, cufhe::Not(output(), input(0), *st));
+                 cufhe::mMux(output(), input(2), input(1), input(0), *st));
+DEFINE_TASK_GATE(NOT, 1, cufhe::mNot(output(), input(0), *st));
 #undef DEFINE_TASK_GATE
 
 class CUFHENetworkBuilder
@@ -178,7 +180,7 @@ public:
                 std::shared_ptr<ProgressGraphMaker> graph)
         : Worker(readyQueue, numFinishedTargets, graph)
     {
-        wi_.stream = std::make_shared<cufhe::Stream>();
+        wi_.stream = std::make_shared<cufhe::Stream>(0, 0);
         wi_.stream->Create();
     }
 };

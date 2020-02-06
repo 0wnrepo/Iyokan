@@ -51,7 +51,7 @@ std::shared_ptr<cufhe::Ctxt> tfhepp2cufhe(const TFHEpp::TLWElvl0& src)
     // FIXME: Check if TFHEpp's parameters are the same as cuFHE's.
     const int32_t n = cufhe::GetDefaultParam()->lwe_n_;
 
-    auto ctxt = std::make_shared<cufhe::Ctxt>();
+    auto ctxt = std::make_shared<cufhe::Ctxt>(CUFHE_GPU_NUM);
     for (int i = 0; i < n + 1; i++)
         ctxt->lwe_sample_->data()[i] = src[i];
 
@@ -126,7 +126,7 @@ void doCUFHE(const Options& opt)
 
     // Prepare cuFHE
     cufhe::SetSeed();
-    cufhe::Initialize(*tfhepp2cufhe(*reqPacket.gateKey));
+    cufhe::Initialize(*tfhepp2cufhe(*reqPacket.gateKey), CUFHE_GPU_NUM);
 
     // Read network
     CUFHENetworkBuilder::NetworkType net = [&opt, &reqPacket] {
@@ -159,9 +159,9 @@ void doCUFHE(const Options& opt)
 
     // Turn reset on
     {
-        cufhe::Ctxt one;
-        cufhe::ConstantOne(one);
-        cufhe::Synchronize();
+        cufhe::Ctxt one(CUFHE_GPU_NUM);
+        cufhe::ConstantOne(one, 0);
+        cufhe::Synchronize(CUFHE_GPU_NUM);
         get(net, "input", "reset", 0)->set(one);
     }
     // Reset
@@ -169,9 +169,9 @@ void doCUFHE(const Options& opt)
 
     // Turn reset off
     {
-        cufhe::Ctxt zero;
-        cufhe::ConstantZero(zero);
-        cufhe::Synchronize();
+        cufhe::Ctxt zero(CUFHE_GPU_NUM);
+        cufhe::ConstantZero(zero, 0);
+        cufhe::Synchronize(CUFHE_GPU_NUM);
         get(net, "input", "reset", 0)->set(zero);
     }
     // Go computing
