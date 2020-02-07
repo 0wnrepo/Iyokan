@@ -42,7 +42,7 @@ int main(int argc, char **argv)
         tfhe->add_option("-o", opt.outputFile, "")->required();
 #ifdef IYOKAN_CUDA_ENABLED
         tfhe->add_flag("--enable-gpu", enableGPU, "");
-        opt.numWorkers = 240;
+        opt.numWorkers = 640;
 #endif
         tfhe->parse_complete_callback([&] { type = TYPE::TFHE; });
     }

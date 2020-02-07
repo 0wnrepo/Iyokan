@@ -6,7 +6,7 @@
 
 #include "iyokan.hpp"
 
-#define CUFHE_GPU_NUM (2)
+#define CUFHE_GPU_NUM (8)
 
 struct CUFHEWorkerInfo {
     std::shared_ptr<cufhe::Stream> stream;
@@ -17,11 +17,13 @@ using TaskCUFHEGate = Task<cufhe::Ctxt, cufhe::Ctxt, CUFHEWorkerInfo>;
 inline void copyCtxt(cufhe::Ctxt& dst, const cufhe::Ctxt& src,
                      std::shared_ptr<cufhe::Stream> stream = nullptr)
 {
-    if (stream)
+    if (stream){
         cufhe::mCopy(dst, src, *stream);
-    else
-        cufhe::mCopySync(dst, src);
     cufhe::Synchronize(CUFHE_GPU_NUM);
+    }
+    else{
+        cufhe::mCopySync(dst, src);
+    }
 }
 
 class TaskCUFHEGateMem : public TaskCUFHEGate {

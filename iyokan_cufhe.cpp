@@ -204,5 +204,5 @@ void doCUFHE(const Options& opt)
     writeToArchive(opt.outputFile, resPacket);
 
     // Clean cuFHE up
-    cufhe::CleanUp();
+    cufhe::CleanUp(CUFHE_GPU_NUM);
 }
