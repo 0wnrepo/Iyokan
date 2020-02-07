@@ -18,7 +18,7 @@ void processAllGates(CUFHENetwork& net, int numWorkers,
     size_t numFinishedTargets = 0;
     std::vector<CUFHEWorker> workers;
     for (int i = 0; i < numWorkers; i++)
-        workers.emplace_back(readyQueue, numFinishedTargets, graph);
+        workers.emplace_back(readyQueue, numFinishedTargets, graph, i%CUFHE_GPU_NUM);
 
     // Process all targets.
     while (numFinishedTargets < net.numNodes()) {

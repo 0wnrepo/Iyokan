@@ -6,7 +6,7 @@
 
 #include "iyokan.hpp"
 
-#define CUFHE_GPU_NUM (1)
+#define CUFHE_GPU_NUM (2)
 
 struct CUFHEWorkerInfo {
     std::shared_ptr<cufhe::Stream> stream;
@@ -177,10 +177,10 @@ private:
 public:
     CUFHEWorker(ReadyQueue<CUFHEWorkerInfo>& readyQueue,
                 size_t& numFinishedTargets,
-                std::shared_ptr<ProgressGraphMaker> graph)
+                std::shared_ptr<ProgressGraphMaker> graph, int gpuNum)
         : Worker(readyQueue, numFinishedTargets, graph)
     {
-        wi_.stream = std::make_shared<cufhe::Stream>(0, 0);
+        wi_.stream = std::make_shared<cufhe::Stream>(gpuNum, 0);
         wi_.stream->Create();
     }
 };
